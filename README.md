@@ -49,34 +49,58 @@ process, you can successfully run it in children. If you try to run in parent pr
 Examples
 ========
 
+Plain
+-----
+```python
+from pathlib import Path
+
+from jsaxonpy import Xslt
+
+
+t = Xslt()
+xml = Path("file.xml")
+xsl = Path("file.xsl")
+print(t.transform(xml, xsl))
+```
+would produce:
+```
+<?xml version="1.0" encoding="UTF-8"?><root><child>text</child></root>
+```
+
 Threads
 -------
-```
-from concurrent.futures
+```python
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
-xsl_file = '...'
+from jsaxonpy import Xslt
+
+xsl_path = Path('file.xsl')
 worker_args = []
 
 with ThreadPoolExecutor(max_workers=3) as executor:
-for xml_file in ["file1.xml", "file2.xml", ..., "fileN.xml"]:
-    worker_args.append((Path(xml_file), Path(xsl_file)))
+  for xml_path in map(lambda f: Path(f), ["file1.xml", ..., "fileN.xml"]):
+    worker_args.append((xml_path, xsl_path))
     for out in executor.map(func, worker_args):
-        assert out == xml
+      assert out == xml
 ```
 
 Processes
 ---------
-```
+```python
 from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
 
-xsl_file = '...'
+from jsaxonpy import Xslt
+
+xsl_path = Path('file.xsl')
 worker_args = []
 
 with ProcessPoolExecutor(max_workers=3) as executor:
-for xml_file in ["file1.xml", "file2.xml", ..., "fileN.xml"]:
-    worker_args.append((Path(xml_file), Path(xsl_file)))
+  for xml_path in map(lambda f: Path(f), ["file1.xml", ..., "fileN.xml"]):
+    worker_args.append((xml_path, xsl_path))
     for out in executor.map(func, worker_args):
-        assert out == xml
+      assert out == xml
 ```
 
 Notes
@@ -91,8 +115,12 @@ installation.
 You can use `JVM_OPTIONS` environment variable to set java virtual environment,
 see example below.
 
-```
+```bash
 export JVM_OPTIONS="-Xrs -Xmx3024m -XX:ActiveProcessorCount=24";
 export CLASSPATH=/usr/local/Saxon-J/saxon-he-11.4.jar;
 your_python_app.py
 ```
+
+When you pass the same xsl path it is actually being compiled once for the
+time of the life of the process/thread, which means you do not need to do
+any special steps to compile those to speed up transformations.
