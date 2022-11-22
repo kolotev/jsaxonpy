@@ -1,0 +1,72 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+
+[project]
+name = "jsaxonpy"
+authors = [{name = "Andrey Kolotev", email = "kolotev@gmail.com"}]
+readme = "README.md"
+license = {file = "LICENSE"}
+dynamic = ["version", "description"]
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Intended Audience :: Developers",
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Libraries :: Java Libraries",
+    "Topic :: Text Processing :: Markup :: XML",
+    "Topic :: Software Development :: Libraries :: Java Libraries",
+    "Operating System :: Unix",
+    ]
+
+requires-python = ">=3.7"
+
+dependencies = [
+    "pyjnius",
+]
+
+
+[project.urls]
+Home = "https://github/kolotev/jsaxonpy"
+
+
+[project.optional-dependencies]
+
+test = [
+    "pytest >=7.2.0",
+    "pytest-xdist",
+    "pytest-cov",
+    "pytest-html",
+    "hypothesis",
+    "black",
+    "isort",
+    "flake8",
+]
+
+dev = [
+    "tox>=3.3.0",
+]
+
+[tool.black]
+line-length = 99
+include = '/(?:tests|src)/.*\.pyi?$'
+exclude = '''
+(?:
+    /migrations/
+    | settings.py
+)
+'''
+target-version = ['py39']
+
+[tool.isort]
+profile = "black"
+skip = ["settings.py"]
+
+[tool.flit]
