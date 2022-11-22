@@ -3,8 +3,9 @@
     transformations in your python applications.
 """
 
+from . import __version__, __version_tuple__, version
 from .xslt import Xslt
 
-__version__ = "0.0.0"
-__revision__ = ""
-__all__ = [Xslt]
+__revision__ = __version_tuple__[3]
+
+__all__ = [Xslt, version, __version__, __version_tuple__, __revision__]

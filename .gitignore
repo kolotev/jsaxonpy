@@ -170,3 +170,4 @@ cython_debug/
 Pipfile
 Pipfile.lock
 tests-report/
+__version__.py

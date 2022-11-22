@@ -30,6 +30,7 @@ requires-python = ">=3.7"
 
 dependencies = [
     "pyjnius",
+    "setuptools_scm[toml] >= 6.2"
 ]
 
 
@@ -53,6 +54,10 @@ test = [
 dev = [
     "tox>=3.3.0",
 ]
+
+[tool.setuptools_scm]
+write_to = "src/jsaxonpy/__version__.py"
+tag_regex = "^(?P<prefix>v)?(?P<version>[^\\+]+)(?P<suffix>.*)?$"
 
 [tool.black]
 line-length = 99
