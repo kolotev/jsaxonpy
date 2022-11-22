@@ -3,7 +3,7 @@
     transformations in your python applications.
 """
 
-from . import __version__, __version_tuple__, version
+from .__version__ import __version__, __version_tuple__, version
 from .xslt import Xslt
 
 __revision__ = __version_tuple__[3]
