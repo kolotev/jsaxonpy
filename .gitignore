@@ -170,4 +170,6 @@ cython_debug/
 Pipfile
 Pipfile.lock
 tests-report/
-__version__.py
+_version.py
+flit_publish.sh
+pyproject_flit.toml
