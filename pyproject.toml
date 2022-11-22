@@ -5,10 +5,11 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "jsaxonpy"
+version = "0.2.0"
 authors = [{name = "Andrey Kolotev", email = "kolotev@gmail.com"}]
 readme = "README.md"
 license = {file = "LICENSE"}
-dynamic = ["version", "description"]
+dynamic = ["description"]
 classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Intended Audience :: Developers",
@@ -30,7 +31,6 @@ requires-python = ">=3.7"
 
 dependencies = [
     "pyjnius",
-    "setuptools_scm[toml] >= 6.2"
 ]
 
 
@@ -53,11 +53,16 @@ test = [
 
 dev = [
     "tox>=3.3.0",
+    "bump2version",
 ]
 
-[tool.setuptools_scm]
-write_to = "src/jsaxonpy/__version__.py"
-tag_regex = "^(?P<prefix>v)?(?P<version>[^\\+]+)(?P<suffix>.*)?$"
+[tool.flit.sdist]
+exclude = [
+    ".gitignore",
+    ".git_archival.txt",
+    ".gitattributes.txt",
+    "tox.ini",
+]
 
 [tool.black]
 line-length = 99
@@ -73,5 +78,3 @@ target-version = ['py39']
 [tool.isort]
 profile = "black"
 skip = ["settings.py"]
-
-[tool.flit]
