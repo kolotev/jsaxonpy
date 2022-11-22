@@ -30,13 +30,13 @@ classifiers = [
 requires-python = ">=3.7"
 
 dependencies = [
-    "pyjnius",
+    "pyjnius >= 1.0.0, < 2.0.0",
 ]
 
 
 [project.urls]
-Home = "https://github/kolotev/jsaxonpy"
-Source = "https://github/kolotev/jsaxonpy"
+Home = "https://github.com/kolotev/jsaxonpy"
+Source = "https://github.com/kolotev/jsaxonpy"
 
 [project.optional-dependencies]
 
