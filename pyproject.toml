@@ -36,7 +36,7 @@ dependencies = [
 
 [project.urls]
 Home = "https://github/kolotev/jsaxonpy"
-
+Source = "https://github/kolotev/jsaxonpy"
 
 [project.optional-dependencies]
 
@@ -60,8 +60,10 @@ dev = [
 exclude = [
     ".gitignore",
     ".git_archival.txt",
-    ".gitattributes.txt",
+    ".gitattributes",
+    ".bumpversion.cfg",
     "tox.ini",
+    "tests",
 ]
 
 [tool.black]
