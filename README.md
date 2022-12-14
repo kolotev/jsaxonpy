@@ -75,6 +75,12 @@ from pathlib import Path
 
 from jsaxonpy import Xslt
 
+def func(args):
+    xml, xsl = args
+    t = Xslt()
+    out = t.transform(xml, xsl)
+    return out
+
 xsl_path = Path('file.xsl')
 worker_args = []
 
@@ -93,6 +99,12 @@ from pathlib import Path
 
 from jsaxonpy import Xslt
 
+def func(args):
+    xml, xsl = args
+    t = Xslt()
+    out = t.transform(xml, xsl)
+    return out
+
 xsl_path = Path('file.xsl')
 worker_args = []
 
@@ -101,6 +113,63 @@ with ProcessPoolExecutor(max_workers=3) as executor:
     worker_args.append((xml_path, xsl_path))
     for out in executor.map(func, worker_args):
       assert out == xml
+```
+
+GCP Functions
+-------------
+```python
+import os, threading
+from timeit import default_timer as timer
+
+import functions_framework
+
+from jdk4py import JAVA, JAVA_HOME, JAVA_VERSION
+from saxonhe4py import SAXON_HE_JAR
+from jsaxonpy import Xslt
+
+# following env variable must be defined, otherwise pyjnius would fail
+os.environ["JAVA_HOME"] = str(JAVA_HOME)
+os.environ["JDK_HOME"] = str(JAVA_HOME)
+
+# to find the location of Saxon HE
+os.environ["CLASSPATH"] = str(SAXON_HE_JAR)
+
+# setup JVM options
+os.environ["JVM_OPTIONS"] = "-Xmx64m"
+
+
+@functions_framework.http
+def transform(request):
+    #
+    thread_id = threading.get_native_id()
+    process_id = os.getpid()
+
+    #
+    timer_xslt_started = timer()
+    t = Xslt() # do not move this from function.
+    timer_xslt_ended = timer()
+
+    #
+    xml = "<p>Paragraph text</p>"
+    xsl = """
+    <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    <xsl:template match="/">
+      <xsl:copy-of select="."/>
+    </xsl:template>
+    </xsl:stylesheet>
+    """
+
+    #
+    timer_transform_started = timer()
+    output=t.transform(xml, xsl)
+    timer_transform_ended = timer()
+
+    return (
+      f"{output}\n"
+      f"timer(Xslt)      = {timer_xslt_ended - timer_xslt_started:.6f}\n"
+      f"timer(transform) = {timer_transform_ended - timer_transform_started:.6f}\n"
+      f"thread_id={thread_id} process_id={process_id}\n"
+    )
 ```
 
 Notes
