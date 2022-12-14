@@ -56,7 +56,6 @@ test = [
 
 dev = [
     "tox>=3.3.0",
-    "bump2version",
 ]
 
 [tool.flit.sdist]
