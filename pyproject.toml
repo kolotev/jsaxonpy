@@ -45,6 +45,7 @@ Source = "https://github.com/kolotev/jsaxonpy"
 test = [
     "pytest >=7.2.0",
     "pytest-xdist",
+    "pytest-forked",
     "pytest-cov",
     "pytest-html",
     "hypothesis",
