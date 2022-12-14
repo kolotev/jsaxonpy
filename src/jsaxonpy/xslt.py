@@ -23,6 +23,7 @@ def _construct_Xslt_class(jvm, cache_maxsize):  # noqa: ignore=C901
     # JVM starts and how to avoid it it starting in parent process,
     # of multiprocessing is used.
     autoclass = jvm.jnius.autoclass
+    cast = jvm.jnius.cast
 
     # output related classes
     ByteArrayOutputStream = autoclass("java.io.ByteArrayOutputStream")
@@ -89,10 +90,9 @@ def _construct_Xslt_class(jvm, cache_maxsize):  # noqa: ignore=C901
 
             elif isinstance(source, str):
                 reader = StringReader(source)
-                stream_source = StreamSource(reader, "http://localhost/string")
+                stream_source = StreamSource(cast("java.io.Reader", reader))
 
             elif isinstance(source, Path):
-                print(f"source = {str(source)} type(source)={type(source)}")
                 stream_source = StreamSource(File(str(source)))
 
             else:
