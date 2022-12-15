@@ -185,7 +185,7 @@ You can use `JVM_OPTIONS` environment variable to set java virtual environment,
 see example below.
 
 ```bash
-export JVM_OPTIONS="-Xrs -Xmx3024m -XX:ActiveProcessorCount=24";
+export JVM_OPTIONS="-Xrs -Xmx4096m -XX:ActiveProcessorCount=24";
 export CLASSPATH=/usr/local/Saxon-J/saxon-he-11.4.jar;
 your_python_app.py
 ```
@@ -193,3 +193,50 @@ your_python_app.py
 When you pass the same xsl path it is actually being compiled once for the
 time of the life of the process/thread, which means you do not need to do
 any special steps to compile those to speed up transformations.
+
+API
+===
+
+class JVM
+---------
+```
+ 1 Help on class JVM in module jsaxonpy.jvm:
+ 2
+ 3 class JVM(builtins.object)
+ 4  |  JVM(*args, **kwargs)
+ 5  |
+ 6  |  Methods defined here:
+ 7  |
+ 8  |  __init__(self)
+ 9  |      Initialize self.  See help(type(self)) for accurate signature.
+10  |
+```
+
+class Xslt
+----------
+
+```
+ 1 Help on class Xslt in module jsaxonpy.xslt:
+ 2
+ 3 class Xslt(InterfaceXslt)
+ 4  |  Xslt(cache_maxsize: int = 32, catalog: Optional[pathlib.Path] = None, jvm: Optional[jsaxonpy.jvm.JVM] = None, licensed_edition: bool = False      4 )
+ 5  |
+ 6  |  # if you plan to use multiprocessing, then do not instantiate Xslt class
+ 7  |  # in parent process because saxon compiler hangs if parent process has jnius
+ 8  |  # JVM machine running.
+ 9  |
+10  |  Method resolution order:
+11  |      Xslt
+12  |      InterfaceXslt
+13  |      abc.ABC
+14  |      builtins.object
+15  |
+16  |  Methods defined here:
+17  |
+18  |  __init__(self, cache_maxsize: int = 32, catalog: Optional[pathlib.Path] = None, jvm: Optional[jsaxonpy.jvm.JVM] = None, licensed_edition: bo
+18 ol = False)
+19  |      Initialize self.  See help(type(self)) for accurate signature.
+20  |
+21  |  transform(self, xml: Union[pathlib.Path, str], xsl: Union[pathlib.Path, str], params: Dict[str, str] = {}, pretty: bool = False) -> str
+22  |
+```
