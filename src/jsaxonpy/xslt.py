@@ -1,5 +1,3 @@
-import functools
-import threading
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, Optional, Union
@@ -13,12 +11,16 @@ XsltParams = Dict[str, str]
 class InterfaceXslt(ABC):
     @abstractmethod
     def transform(
-        self, xml: InputSource, xsl: InputSource, params: XsltParams = {}, pretty: bool = False
+        self,
+        xml: InputSource,
+        xsl: InputSource,
+        params: XsltParams = {},
+        pretty: bool = False,
     ) -> str:
         pass
 
 
-def _xslt_class_factory(jvm, cache_maxsize):  # noqa: ignore=C901
+def _xslt_class_factory(jvm):  # noqa: ignore=C901
     # The following code was developed here because of peculiarities how
     # JVM starts and how to avoid it it starting in parent process,
     # of multiprocessing is used.
@@ -55,8 +57,7 @@ def _xslt_class_factory(jvm, cache_maxsize):  # noqa: ignore=C901
         def _compiler(self):
             return self._processor().newXsltCompiler()
 
-        @functools.lru_cache(maxsize=cache_maxsize)
-        def _transformer(self, source, thread_id=threading.get_native_id()) -> XsltTransformer:
+        def _transformer(self, source) -> XsltTransformer:
             compiler = self._compiler()
             stream_source = self._stream_source(source)
             stylesheet = compiler.compile(stream_source)
@@ -114,7 +115,7 @@ def _xslt_class_factory(jvm, cache_maxsize):  # noqa: ignore=C901
             params: XsltParams = {},
             pretty: bool = False,
         ) -> str:
-
+            #
             transformer = self._transformer(xsl)
             output = self._set_output(transformer, pretty)
             self._parse_xml(transformer, xml)
@@ -135,13 +136,23 @@ class Xslt(InterfaceXslt):
 
     def __init__(
         self,
-        cache_maxsize: int = 32,
         catalog: Optional[Path] = None,
         jvm: Optional[JVM] = None,
         licensed_edition: bool = False,
     ):
+        """
+        Initializer for Xslt class.
+
+        Args:
+            @catalog (Optional[Path], optional):
+                Path to catalog file, optional. Defaults to None.
+            @jvm (Optional[JVM], optional):
+                optional instance of `JVM` class. Defaults to None.
+            @licensed_edition (bool, optional):
+                Indicate if you run on Licensed edition. Defaults to False.
+        """
         self.jvm = jvm or JVM()
-        XsltClass = _xslt_class_factory(self.jvm, cache_maxsize)
+        XsltClass = _xslt_class_factory(self.jvm)
         self._xslt = XsltClass(licensed_edition=licensed_edition, catalog=catalog)
 
     def transform(
@@ -151,5 +162,32 @@ class Xslt(InterfaceXslt):
         params: XsltParams = {},
         pretty: bool = False,
     ) -> str:
+        """
+        `transform` method executes the transformation of the input XML string
+        or file with provided XSL code and optional XSL parameters.
+        You can pass Stylesheet Export File (SEF) in place of `xsl` argument instead
+        of regular XSL file path.
+
+        Args:
+            @xml (InputSource):
+                XML markup (string) or file pathlib.Path("path/to/file.xml")
+            @xsl (InputSource):
+                XSL code (string) or file pathlib.Path("path/to/file.xsl")
+            @params (XsltParams, optional):
+                XSL parameters. Defaults to {}.
+            @pretty (bool, optional):
+                Format output pretty. Defaults to False.
+
+        Returns:
+            str: The output of the transformation
+
+        Notes:
+            The following types `InputSource`, `XsltParams` are defined as following:
+
+            InputSource = Union[Path, str]
+            XsltParams = Dict[str, str]
+
+
+        """
 
         return self._xslt.transform(xml, xsl, params, pretty)
