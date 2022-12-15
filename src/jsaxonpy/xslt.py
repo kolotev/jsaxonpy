@@ -4,11 +4,25 @@ from typing import Dict, Optional, Union
 
 from .jvm import JVM
 
+VERSION_SUPPORTING_CATALOG = 11
+
 InputSource = Union[Path, str]
 XsltParams = Dict[str, str]
 
 
 class InterfaceXslt(ABC):
+    @abstractmethod
+    def saxon_version(self) -> str:
+        pass
+
+    @abstractmethod
+    def saxon_major_version(self) -> int:
+        pass
+
+    @abstractmethod
+    def is_catalog_supported(self) -> bool:
+        pass
+
     @abstractmethod
     def transform(
         self,
@@ -40,17 +54,19 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
     StreamSource = autoclass("javax.xml.transform.stream.StreamSource")
     XdmAtomicValue = autoclass("net.sf.saxon.s9api.XdmAtomicValue")
     XsltTransformer = autoclass("net.sf.saxon.s9api.XsltTransformer")
+    SaxonVersion = autoclass("net.sf.saxon.Version")
 
     class _Xslt(InterfaceXslt):
         def __init__(self, licensed_edition: bool, catalog: Optional[Path]):
             self._licensed_edition = licensed_edition
             self._catalog = catalog
+            self._saxon_version = SaxonVersion.getProductVersion()
 
         def _processor(self):
             # https://www.saxonica.com/html/documentation11/jvmdoc/net/sf/saxon/s9api/Processor.html
             # @argument is a boolean licensedEdition
             processor = Processor(self._licensed_edition)
-            if isinstance(self._catalog, Path):
+            if isinstance(self._catalog, Path) and self.is_catalog_supported:
                 processor.setCatalogFiles(str(self._catalog))
             return processor
 
@@ -108,6 +124,18 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
 
             return stream_source
 
+        @property
+        def saxon_version(self) -> str:
+            return self._saxon_version
+
+        @property
+        def saxon_major_version(self) -> int:
+            return int(self.saxon_version.split(".")[0])
+
+        @property
+        def is_catalog_supported(self):
+            return self.saxon_major_version >= VERSION_SUPPORTING_CATALOG
+
         def transform(
             self,
             xml: InputSource,
@@ -128,11 +156,16 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
     return _Xslt
 
 
-# if you plan to use multiprocessing, then do not instantiate Xslt class
-# in parent process because saxon compiler hangs if parent process has jnius
-# JVM machine running.
 class Xslt(InterfaceXslt):
-    """ """
+    """
+    Xslt class exposes transformations based on Java Saxon transform() method of
+    net.sf.saxon.s9api.XsltTransformer class.
+
+    Notes:
+        If you plan to use multiprocessing, then do not instantiate Xslt class
+        in parent process because saxon compiler hangs if parent process has jnius
+        JVM machine running already.
+    """
 
     def __init__(
         self,
@@ -154,6 +187,18 @@ class Xslt(InterfaceXslt):
         self.jvm = jvm or JVM()
         XsltClass = _xslt_class_factory(self.jvm)
         self._xslt = XsltClass(licensed_edition=licensed_edition, catalog=catalog)
+
+    @property
+    def saxon_version(self):
+        return self._xslt.saxon_version
+
+    @property
+    def saxon_major_version(self):
+        return self._xslt.saxon_major_version
+
+    @property
+    def is_catalog_supported(self) -> bool:
+        return self._xslt.is_catalog_supported
 
     def transform(
         self,
