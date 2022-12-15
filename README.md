@@ -177,6 +177,8 @@ Notes
 
 Supported and tested versions of Saxon are 9, 10, 11.
 
+Catalog resolution is supported only if you run on Saxon 11.
+
 Before executing you application it is expected you set your java related
 environment variables, including the `CLASSPATH` to point to your Java Saxon
 installation.
@@ -219,24 +221,67 @@ class Xslt
  1 Help on class Xslt in module jsaxonpy.xslt:
  2
  3 class Xslt(InterfaceXslt)
- 4  |  Xslt(cache_maxsize: int = 32, catalog: Optional[pathlib.Path] = None, jvm: Optional[jsaxonpy.jvm.JVM] = None, licensed_edition: bool = False      4 )
+ 4  |  Xslt(catalog: Optional[pathlib.Path] = None, jvm: Optional[jsaxonpy.jvm.JVM] = None, licensed_edition: bool = False)
  5  |
- 6  |  # if you plan to use multiprocessing, then do not instantiate Xslt class
- 7  |  # in parent process because saxon compiler hangs if parent process has jnius
- 8  |  # JVM machine running.
- 9  |
-10  |  Method resolution order:
-11  |      Xslt
-12  |      InterfaceXslt
-13  |      abc.ABC
-14  |      builtins.object
-15  |
-16  |  Methods defined here:
-17  |
-18  |  __init__(self, cache_maxsize: int = 32, catalog: Optional[pathlib.Path] = None, jvm: Optional[jsaxonpy.jvm.JVM] = None, licensed_edition: bo
-18 ol = False)
-19  |      Initialize self.  See help(type(self)) for accurate signature.
-20  |
-21  |  transform(self, xml: Union[pathlib.Path, str], xsl: Union[pathlib.Path, str], params: Dict[str, str] = {}, pretty: bool = False) -> str
-22  |
+ 6  |  Xslt class exposes transformations based on Java Saxon transform() method of
+ 7  |  net.sf.saxon.s9api.XsltTransformer class.
+ 8  |
+ 9  |  Notes:
+10  |      If you plan to use multiprocessing, then do not instantiate Xslt class
+11  |      in parent process because saxon compiler hangs if parent process has jnius
+12  |      JVM machine running already.
+13  |
+14  |  Method resolution order:
+15  |      Xslt
+16  |      InterfaceXslt
+17  |      abc.ABC
+18  |      builtins.object
+19  |
+20  |  Methods defined here:
+21  |
+22  |  __init__(self, catalog: Optional[pathlib.Path] = None, jvm: Optional[jsaxonpy.jvm.JVM] = None, licensed_edition: bool = False)
+23  |      Initializer for Xslt class.
+24  |
+25  |      Args:
+26  |          @catalog (Optional[Path], optional):
+27  |              Path to catalog file, optional. Defaults to None.
+28  |          @jvm (Optional[JVM], optional):
+29  |              optional instance of `JVM` class. Defaults to None.
+30  |          @licensed_edition (bool, optional):
+31  |              Indicate if you run on Licensed edition. Defaults to False.
+32  |
+33  |  transform(self, xml: Union[pathlib.Path, str], xsl: Union[pathlib.Path, str], params: Dict[str, str] = {}, pretty: bool = False) -> str
+34  |      `transform` method executes the transformation of the input XML string
+35  |      or file with provided XSL code and optional XSL parameters.
+36  |      You can pass Stylesheet Export File (SEF) in place of `xsl` argument instead
+37  |      of regular XSL file path.
+38  |
+39  |      Args:
+40  |          @xml (InputSource):
+41  |              XML markup (string) or file pathlib.Path("path/to/file.xml")
+42  |          @xsl (InputSource):
+43  |              XSL code (string) or file pathlib.Path("path/to/file.xsl")
+44  |          @params (XsltParams, optional):
+45  |              XSL parameters. Defaults to {}.
+46  |          @pretty (bool, optional):
+47  |              Format output pretty. Defaults to False.
+48  |
+49  |      Returns:
+50  |          str: The output of the transformation
+51  |
+52  |      Notes:
+53  |          The following types `InputSource`, `XsltParams` are defined as following:
+54  |
+55  |          InputSource = Union[Path, str]
+56  |          XsltParams = Dict[str, str]
+57  |
+58  |  ----------------------------------------------------------------------
+59  |  Readonly properties defined here:
+60  |
+61  |  is_catalog_supported
+62  |
+63  |  saxon_major_version
+64  |
+65  |  saxon_version
+66  |
 ```
