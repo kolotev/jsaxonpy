@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from jsaxonpy import Xslt
@@ -61,6 +63,9 @@ def test_transform_exception_on_bad_xml(xsl_copy):
 
 def test_transform_with_catalog(note_xml, xsl_copy, catalog):
     t = Xslt(catalog=catalog)
+    if not t.is_catalog_supported:
+        pytest.skip(f"catalog is not supported for Saxon {t.saxon_version}")
+
     out = t.transform(note_xml, xsl_copy)
     assert out == (
         """<?xml version="1.0" encoding="UTF-8"?>"""
@@ -71,6 +76,21 @@ def test_transform_with_catalog(note_xml, xsl_copy, catalog):
 
 def test_transform_without_catalog(note_xml, xsl_copy):
     t = Xslt()
+    if not t.is_catalog_supported:
+        pytest.skip(f"catalog is not supported for Saxon {t.saxon_version}")
     with pytest.raises(t.jvm.jnius.JavaException) as e_info:
         t.transform(note_xml, xsl_copy)
     assert "I/O error reported by XML parser processing" in str(e_info)
+
+
+EXPECTED_VERSION_RE = re.compile(r"\d+(\.\d+){1,3}")
+
+
+def test_saxon_version():
+    t = Xslt()
+    assert EXPECTED_VERSION_RE.match(t.saxon_version) is not None
+
+
+def test_saxon_major_version():
+    t = Xslt()
+    assert t.saxon_major_version >= 9
