@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
-    <group prefer="system" xml:base="/pmc/Work/kolotev/0git/pyjnius-saxon/tests/fixtures/">
+    <group prefer="system">
         <system systemId="note.dtd" uri="dtd/note.dtd"/>
     </group>
 </catalog>
