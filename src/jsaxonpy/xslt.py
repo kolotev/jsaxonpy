@@ -2,7 +2,7 @@ import functools
 import threading
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from .jvm import JVM
 
@@ -18,7 +18,7 @@ class InterfaceXslt(ABC):
         pass
 
 
-def _construct_Xslt_class(jvm, cache_maxsize):  # noqa: ignore=C901
+def _xslt_class_factory(jvm, cache_maxsize):  # noqa: ignore=C901
     # The following code was developed here because of peculiarities how
     # JVM starts and how to avoid it it starting in parent process,
     # of multiprocessing is used.
@@ -40,13 +40,17 @@ def _construct_Xslt_class(jvm, cache_maxsize):  # noqa: ignore=C901
     XsltTransformer = autoclass("net.sf.saxon.s9api.XsltTransformer")
 
     class _Xslt(InterfaceXslt):
-        def __init__(self, licensed_edition):
+        def __init__(self, licensed_edition: bool, catalog: Optional[Path]):
             self._licensed_edition = licensed_edition
+            self._catalog = catalog
 
         def _processor(self):
             # https://www.saxonica.com/html/documentation11/jvmdoc/net/sf/saxon/s9api/Processor.html
             # @argument is a boolean licensedEdition
-            return Processor(self._licensed_edition)
+            processor = Processor(self._licensed_edition)
+            if isinstance(self._catalog, Path):
+                processor.setCatalogFiles(str(self._catalog))
+            return processor
 
         def _compiler(self):
             return self._processor().newXsltCompiler()
@@ -129,14 +133,21 @@ def _construct_Xslt_class(jvm, cache_maxsize):  # noqa: ignore=C901
 class Xslt(InterfaceXslt):
     """ """
 
-    def __init__(self, licensed_edition=False, jvm=None, cache_maxsize=32):
+    def __init__(
+        self,
+        cache_maxsize: int = 32,
+        catalog: Optional[Path] = None,
+        jvm: Optional[JVM] = None,
+        licensed_edition: bool = False,
+    ):
         self.jvm = jvm or JVM()
-        self._xslt = _construct_Xslt_class(self.jvm, cache_maxsize)(licensed_edition)
+        XsltClass = _xslt_class_factory(self.jvm, cache_maxsize)
+        self._xslt = XsltClass(licensed_edition=licensed_edition, catalog=catalog)
 
     def transform(
         self,
         xml: InputSource,
-        xsl: InputSource,
+        xsl: InputSource,  # could be string, an xslt or Stylesheet Export File (SEF) file
         params: XsltParams = {},
         pretty: bool = False,
     ) -> str:

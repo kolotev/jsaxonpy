@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 xsl_copy_ = """<xsl:stylesheet
@@ -21,3 +23,13 @@ def xsl_copy():
 @pytest.fixture
 def xml():
     return xml_
+
+
+@pytest.fixture
+def catalog():
+    return Path(__file__).parent / "fixtures" / "catalog.xml"
+
+
+@pytest.fixture
+def note_xml():
+    return Path(__file__).parent / "fixtures" / "note.xml"

@@ -56,4 +56,21 @@ def test_transform_exception_on_bad_xml(xsl_copy):
     t = Xslt()
     with pytest.raises(t.jvm.jnius.JavaException) as e_info:
         t.transform(xml, xsl_copy)
-        assert "XML document structures must start and end within the same entity." in e_info
+    assert "XML document structures must start and end within the same entity." in str(e_info)
+
+
+def test_transform_with_catalog(note_xml, xsl_copy, catalog):
+    t = Xslt(catalog=catalog)
+    out = t.transform(note_xml, xsl_copy)
+    assert out == (
+        """<?xml version="1.0" encoding="UTF-8"?>"""
+        """<note><to>Tove</to><from>Jani</from>"""
+        """<heading>Reminder</heading><body>Don\'t forget me this weekend!</body></note>"""
+    )
+
+
+def test_transform_without_catalog(note_xml, xsl_copy):
+    t = Xslt()
+    with pytest.raises(t.jvm.jnius.JavaException) as e_info:
+        t.transform(note_xml, xsl_copy)
+    assert "I/O error reported by XML parser processing" in str(e_info)
