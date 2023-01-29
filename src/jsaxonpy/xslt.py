@@ -1,4 +1,5 @@
 import logging
+import threading
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from pathlib import Path
@@ -8,6 +9,7 @@ from .jvm import JVM
 from .singleton import AbcThreadSingletonMeta
 
 logger = logging.getLogger(__name__)
+lock = threading.Lock()
 
 # minimum version of Saxon processor that supports catalog functionality
 MIN_VERSION_SUPPORTING_CATALOG = 11
@@ -89,23 +91,19 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
             return stylesheet.load()
 
         def _set_param(self, transformer: XsltTransformer, name: str, value: str) -> None:
-            qname = QName(name)
-            transformer.setParameter(qname, XdmAtomicValue(value))
-            if transformer.getParameter(qname) is None:
-                logger.warning(
-                    f"Verification of setting xsl param name={name} had failed, "
-                    "trying to set it again."
-                )
-                self._set_param(transformer, name, value)
+            with lock:
+                transformer.setParameter(QName(name), XdmAtomicValue(value))
 
         def _set_params(self, transformer: XsltTransformer, dict_: XsltParams) -> None:
-            transformer.clearParameters()
+            with lock:
+                transformer.clearParameters()
             for name, value in dict_.items():
                 self._set_param(transformer, name, value)
 
         def _parse_xml(self, transformer: XsltTransformer, source: InputSource) -> None:
             xml_stream = self._stream_source(source)
-            transformer.setSource(xml_stream)
+            with lock:
+                transformer.setSource(xml_stream)
 
         def _set_output(self, transformer: XsltTransformer, pretty: bool) -> ByteArrayOutputStream:
             output_stream = ByteArrayOutputStream()
@@ -113,7 +111,8 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
             output_serializer = self._processor.newSerializer(stream_writer)
             INDENT = SerializerProperty.INDENT
             output_serializer.setOutputProperty(INDENT, "yes" if pretty else "no")
-            transformer.setDestination(output_serializer)
+            with lock:
+                transformer.setDestination(output_serializer)
             return output_stream
 
         def _is_not_xml(self, source: str) -> bool:
