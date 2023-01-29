@@ -1,16 +1,22 @@
+import logging
 from abc import ABC, abstractmethod
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Optional, Union
 
 from .jvm import JVM
+from .signleton import AbcThreadSingletonMeta
 
-VERSION_SUPPORTING_CATALOG = 11
+logger = logging.getLogger(__name__)
+
+# minimum version of Saxon processor that supports catalog functionality
+MIN_VERSION_SUPPORTING_CATALOG = 11
 
 InputSource = Union[Path, str]
 XsltParams = Dict[str, str]
 
 
-class InterfaceXslt(ABC):
+class InterfaceXslt(ABC, metaclass=AbcThreadSingletonMeta):
     @abstractmethod
     def saxon_version(self) -> str:
         pass
@@ -43,45 +49,54 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
 
     # output related classes
     ByteArrayOutputStream = autoclass("java.io.ByteArrayOutputStream")
+    File = autoclass("java.io.File")
     OutputStreamWriter = autoclass("java.io.OutputStreamWriter")
     StringReader = autoclass("java.io.StringReader")
-    File = autoclass("java.io.File")
 
     # saxon related classes
     Processor = autoclass("net.sf.saxon.s9api.Processor")
     QName = autoclass("net.sf.saxon.s9api.QName")
+    SaxonVersion = autoclass("net.sf.saxon.Version")
     SerializerProperty = autoclass("net.sf.saxon.s9api.Serializer$Property")
     StreamSource = autoclass("javax.xml.transform.stream.StreamSource")
     XdmAtomicValue = autoclass("net.sf.saxon.s9api.XdmAtomicValue")
+    XsltCompiler = autoclass("net.sf.saxon.s9api.XsltCompiler")
     XsltTransformer = autoclass("net.sf.saxon.s9api.XsltTransformer")
-    SaxonVersion = autoclass("net.sf.saxon.Version")
 
     class _Xslt(InterfaceXslt):
         def __init__(self, licensed_edition: bool, catalog: Optional[Path]):
             self._licensed_edition = licensed_edition
             self._catalog = catalog
             self._saxon_version = SaxonVersion.getProductVersion()
+            self._processor = self._get_processor(licensed_edition, catalog)
 
-        def _processor(self):
+        def _get_processor(self, licensed_edition: bool, catalog: Optional[Path]) -> Processor:
             # https://www.saxonica.com/html/documentation11/jvmdoc/net/sf/saxon/s9api/Processor.html
             # @argument is a boolean licensedEdition
-            processor = Processor(self._licensed_edition)
-            if isinstance(self._catalog, Path) and self.is_catalog_supported:
-                processor.setCatalogFiles(str(self._catalog))
+            processor = Processor(licensed_edition)
+            if isinstance(catalog, Path) and self.is_catalog_supported:
+                processor.setCatalogFiles(str(catalog))
             return processor
 
-        def _compiler(self):
-            return self._processor().newXsltCompiler()
+        def _compiler(self) -> XsltCompiler:
+            return self._processor.newXsltCompiler()
 
-        def _transformer(self, source) -> XsltTransformer:
+        @lru_cache(maxsize=32)
+        def _transformer(self, source: InputSource) -> XsltTransformer:
             compiler = self._compiler()
             stream_source = self._stream_source(source)
             stylesheet = compiler.compile(stream_source)
-
             return stylesheet.load()
 
         def _set_param(self, transformer: XsltTransformer, name: str, value: str) -> None:
-            transformer.setParameter(QName(name), XdmAtomicValue(value))
+            qname = QName(name)
+            transformer.setParameter(qname, XdmAtomicValue(value))
+            if transformer.getParameter(qname) is None:
+                logger.warning(
+                    f"Verification of setting xsl param name={name} had failed, "
+                    "trying to set it again."
+                )
+                self._set_param(transformer, name, value)
 
         def _set_params(self, transformer: XsltTransformer, dict_: XsltParams) -> None:
             transformer.clearParameters()
@@ -95,11 +110,10 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
         def _set_output(self, transformer: XsltTransformer, pretty: bool) -> ByteArrayOutputStream:
             output_stream = ByteArrayOutputStream()
             stream_writer = OutputStreamWriter(output_stream)
-            output_serializer = self._processor().newSerializer(stream_writer)
+            output_serializer = self._processor.newSerializer(stream_writer)
             INDENT = SerializerProperty.INDENT
             output_serializer.setOutputProperty(INDENT, "yes" if pretty else "no")
             transformer.setDestination(output_serializer)
-
             return output_stream
 
         def _is_not_xml(self, source: str) -> bool:
@@ -133,8 +147,8 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
             return int(self.saxon_version.split(".")[0])
 
         @property
-        def is_catalog_supported(self):
-            return self.saxon_major_version >= VERSION_SUPPORTING_CATALOG
+        def is_catalog_supported(self) -> bool:
+            return self.saxon_major_version >= MIN_VERSION_SUPPORTING_CATALOG
 
         def transform(
             self,
@@ -145,18 +159,17 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
         ) -> str:
             #
             transformer = self._transformer(xsl)
-            output = self._set_output(transformer, pretty)
             self._parse_xml(transformer, xml)
             self._set_params(transformer, params)
+            output = self._set_output(transformer, pretty)
             transformer.transform()
-
-            #
             return output.toString()
 
     return _Xslt
 
 
 class Xslt(InterfaceXslt):
+
     """
     Xslt class exposes transformations based on Java Saxon transform() method of
     net.sf.saxon.s9api.XsltTransformer class.
@@ -203,21 +216,22 @@ class Xslt(InterfaceXslt):
     def transform(
         self,
         xml: InputSource,
-        xsl: InputSource,  # could be string, an xslt or Stylesheet Export File (SEF) file
+        xsl: InputSource,
         params: XsltParams = {},
         pretty: bool = False,
     ) -> str:
         """
         `transform` method executes the transformation of the input XML string
         or file with provided XSL code and optional XSL parameters.
-        You can pass Stylesheet Export File (SEF) in place of `xsl` argument instead
-        of regular XSL file path.
+        You can pass Stylesheet Export File (SEF) in place of `xsl` argument
+        instead of regular XSL file path.
 
         Args:
             @xml (InputSource):
                 XML markup (string) or file pathlib.Path("path/to/file.xml")
             @xsl (InputSource):
-                XSL code (string) or file pathlib.Path("path/to/file.xsl")
+                XSL code (string) or file as pathlib.Path("path/to/file.xsl")
+                or Stylesheet Export File (SEF).
             @params (XsltParams, optional):
                 XSL parameters. Defaults to {}.
             @pretty (bool, optional):
@@ -234,5 +248,4 @@ class Xslt(InterfaceXslt):
 
 
         """
-
         return self._xslt.transform(xml, xsl, params, pretty)
