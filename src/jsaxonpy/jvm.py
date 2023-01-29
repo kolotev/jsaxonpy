@@ -1,6 +1,6 @@
 import os
 
-from .signleton import ProcessSingletonMeta
+from .singleton import ProcessSingletonMeta
 
 
 class JVM(metaclass=ProcessSingletonMeta):

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, Optional, Union
 
 from .jvm import JVM
-from .signleton import AbcThreadSingletonMeta
+from .singleton import AbcThreadSingletonMeta
 
 logger = logging.getLogger(__name__)
 
