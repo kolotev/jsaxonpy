@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1] 2023-01-29
+
+### Fixed
+
+- exceptions caused by presumably unsafe parts of Saxon were fixed with
+  threading.Lock() mechanism.
+
+
 ## [0.7.0] 2023-01-28
 
 ### Added
@@ -14,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - workaround for JVM exception: Invalid JSON input on line 1: An empty string
   is not valid JSON net.sf.saxon.s9api.SaxonApiException was implemented;
 - spelling typo for singleton (file signleton.py) was fixed;
+
 
 ## [0.6.0] 2022-12-15
 
