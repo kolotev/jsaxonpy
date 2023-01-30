@@ -175,9 +175,9 @@ def transform(request):
 Notes
 =====
 
-Supported and tested versions of Saxon are 9, 10, 11.
+The following versions of Saxon were tested 9, 10, 11.
 
-Catalog resolution is supported only if you run on Saxon 11.
+XML Catalog resolution is available for Saxon 11.
 
 Before executing you application it is expected you set your java related
 environment variables, including the `CLASSPATH` to point to your Java Saxon
@@ -195,6 +195,27 @@ your_python_app.py
 When you pass the same xsl path it is actually being compiled once for the
 time of the life of the process/thread, which means you do not need to do
 any special steps to compile those to speed up transformations.
+
+Development note
+----------------
+
+Based on github issue [Passing PythonJavaClass object to Java method/class does
+not increase Python ref counter ](https://github.com/kivy/pyjnius/issues/345)
+to avoid undefined values passed to Saxon code (JVM) it is suggested to assign
+Python's autoclass or cast derivatives `PythonJavaClass` to python variables.
+An example:
+
+instead of:
+```python
+transformer.setParameter(QName(name), XdmAtomicValue(value))
+```
+
+write:
+```python
+qname= QName(name)
+xdm_atomic_value = XdmAtomicValue(value)
+transformer.setParameter(qname, xdm_atomic_value)
+```
 
 API
 ===
