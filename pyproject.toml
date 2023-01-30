@@ -59,16 +59,6 @@ dev = [
     "twine",
 ]
 
-[tool.flit.sdist]
-exclude = [
-    ".gitignore",
-    ".git_archival.txt",
-    ".gitattributes",
-    ".bumpversion.cfg",
-    "tox.ini",
-    "tests",
-]
-
 [tool.black]
 line-length = 99
 include = '/(?:tests|src)/.*\.pyi?$'
