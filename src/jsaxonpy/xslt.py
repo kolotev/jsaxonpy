@@ -1,5 +1,4 @@
 import logging
-import threading
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from pathlib import Path
@@ -9,7 +8,6 @@ from .jvm import JVM
 from .singleton import AbcThreadSingletonMeta
 
 logger = logging.getLogger(__name__)
-lock = threading.Lock()
 
 # minimum version of Saxon processor that supports catalog functionality
 MIN_VERSION_SUPPORTING_CATALOG = 11
@@ -67,8 +65,8 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
 
     class _Xslt(InterfaceXslt):
         def __init__(self, licensed_edition: bool, catalog: Optional[Path]):
-            self._licensed_edition = licensed_edition
             self._catalog = catalog
+            self._licensed_edition = licensed_edition
             self._saxon_version = SaxonVersion.getProductVersion()
             self._processor = self._get_processor(licensed_edition, catalog)
 
@@ -81,29 +79,30 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
             return processor
 
         def _compiler(self) -> XsltCompiler:
-            return self._processor.newXsltCompiler()
+            xslt_compiler = self._processor.newXsltCompiler()
+            return xslt_compiler
 
         @lru_cache(maxsize=32)
         def _transformer(self, source: InputSource) -> XsltTransformer:
             compiler = self._compiler()
             stream_source = self._stream_source(source)
             stylesheet = compiler.compile(stream_source)
-            return stylesheet.load()
+            transformer = stylesheet.load()
+            return transformer
 
         def _set_param(self, transformer: XsltTransformer, name: str, value: str) -> None:
-            with lock:
-                transformer.setParameter(QName(name), XdmAtomicValue(value))
+            qname = QName(name)
+            xdm_atomic_value = XdmAtomicValue(value)
+            transformer.setParameter(qname, xdm_atomic_value)
 
         def _set_params(self, transformer: XsltTransformer, dict_: XsltParams) -> None:
-            with lock:
-                transformer.clearParameters()
+            transformer.clearParameters()
             for name, value in dict_.items():
                 self._set_param(transformer, name, value)
 
         def _parse_xml(self, transformer: XsltTransformer, source: InputSource) -> None:
             xml_stream = self._stream_source(source)
-            with lock:
-                transformer.setSource(xml_stream)
+            transformer.setSource(xml_stream)
 
         def _set_output(self, transformer: XsltTransformer, pretty: bool) -> ByteArrayOutputStream:
             output_stream = ByteArrayOutputStream()
@@ -111,8 +110,7 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
             output_serializer = self._processor.newSerializer(stream_writer)
             INDENT = SerializerProperty.INDENT
             output_serializer.setOutputProperty(INDENT, "yes" if pretty else "no")
-            with lock:
-                transformer.setDestination(output_serializer)
+            transformer.setDestination(output_serializer)
             return output_stream
 
         def _is_not_xml(self, source: str) -> bool:
@@ -123,11 +121,13 @@ def _xslt_class_factory(jvm):  # noqa: ignore=C901
                 raise ValueError("You source string does not look like an XML document")
 
             elif isinstance(source, str):
-                reader = StringReader(source)
-                stream_source = StreamSource(cast("java.io.Reader", reader))
+                string_reader = StringReader(source)
+                reader = cast("java.io.Reader", string_reader)
+                stream_source = StreamSource(reader)
 
             elif isinstance(source, Path):
-                stream_source = StreamSource(File(str(source)))
+                file_source = File(str(source))
+                stream_source = StreamSource(file_source)
 
             else:
                 raise ValueError(
