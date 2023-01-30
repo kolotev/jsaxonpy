@@ -2,11 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.2] 2023-01-30
+
+### Updated
+
+- an alternative implementation of workaround for issue
+  (#345)[(https://github.com/kivy/pyjnius/issues/345)] was made in replacement
+  of using threading.Lock().
+
+
 ## [0.7.1] 2023-01-29
 
 ### Fixed
 
-- exceptions caused by presumably unsafe parts of Saxon were fixed with
+- exceptions caused by presumably thread unsafe code of pyjnius were fixed with
   threading.Lock() mechanism.
 
 
