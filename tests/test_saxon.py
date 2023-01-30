@@ -60,11 +60,13 @@ def test_transform_exception_on_bad_xml(xsl_copy):
         t.transform(xml, xsl_copy)
     assert "XML document structures must start and end within the same entity." in str(e_info)
 
+
 @pytest.mark.parametrize("non_xml_input", ["bla", 1, None])
 def test_exception_on_non_xml(non_xml_input, xsl_copy):
     t = Xslt()
     with pytest.raises(ValueError):
         t.transform(non_xml_input, xsl_copy)
+
 
 def test_transform_with_catalog(note_xml, xsl_copy, catalog):
     t = Xslt(catalog=catalog)
