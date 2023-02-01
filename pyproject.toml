@@ -52,6 +52,7 @@ test = [
     "black>23.0",
     "isort",
     "flake8",
+    "virtualenv",
 ]
 
 dev = [
