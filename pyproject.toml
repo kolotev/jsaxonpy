@@ -11,7 +11,7 @@ description = "Java Saxon XSLT transformations in your python applications"
 authors = [{name = "Andrey Kolotev", email = "kolotev@gmail.com"}]
 readme = "README.md"
 license = {file = "LICENSE"}
-dynamic = ["version",]
+dynamic = ["version", "maintainers"]
 classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Intended Audience :: Developers",
