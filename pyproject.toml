@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=61", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
@@ -49,7 +49,7 @@ test = [
     "pytest-cov",
     "pytest-html",
     "hypothesis",
-    "black",
+    "black>23.0",
     "isort",
     "flake8",
 ]
@@ -57,7 +57,11 @@ test = [
 dev = [
     "tox>=4.0.0",
     "twine",
+    "build",
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]  # list of folders that contain the packages (["."] by default)
 
 [tool.black]
 line-length = 99
