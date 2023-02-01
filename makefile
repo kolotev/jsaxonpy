@@ -65,12 +65,12 @@ tox.ini: pyproject.toml
 
 publish_pypi_test: build
 	@source ${VENV}/bin/activate
-	echo ${SETUP_PY_PYTHON} -m twine upload --repository testpypi dist/*
+	${SETUP_PY_PYTHON} -m twine upload --repository testpypi dist/*
 
 
 publish_pypi: build
 	@source ${VENV}/bin/activate
-	echo ${SETUP_PY_PYTHON} -m twine upload --repository pypi dist/*
+	${SETUP_PY_PYTHON} -m twine upload --repository pypi dist/*
 
 
 clean:
