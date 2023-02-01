@@ -1,3 +1,6 @@
+# This file was created to satisfy NCBI's teamcity python build configuration
+# which can not currently handle pyproject.toml configuration yet.
+
 from setuptools import setup
 
 setup(
