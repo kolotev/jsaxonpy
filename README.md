@@ -196,9 +196,9 @@ When you pass the same xsl path it is actually being compiled once for the
 time of the life of the process/thread, which means you do not need to do
 any special steps to compile those to speed up transformations.
 
-Development note
-----------------
-
+Development notes
+-----------------
+premises
 Based on github issue [Passing PythonJavaClass object to Java method/class does
 not increase Python ref counter ](https://github.com/kivy/pyjnius/issues/345)
 to avoid undefined values passed to Saxon code (JVM) it is suggested to assign
@@ -215,6 +215,29 @@ write:
 qname= QName(name)
 xdm_atomic_value = XdmAtomicValue(value)
 transformer.setParameter(qname, xdm_atomic_value)
+```
+Installing for development
+--------------------------
+
+```bash
+$ pip install .[test,dev]
+```
+
+Running py.test
+---------------
+
+If you would like to run pytest from command line (instead of using tox)
+you need to setup CLASSPATH pointing to you saxon jar file installation.
+
+```bash
+$ export CLASSPATH=/pmc/local/Saxon-J/saxon-he-11.4.jar
+$ pytest
+```
+
+Running all tests
+-----------------
+```bash
+$ tox -p auto
 ```
 
 API

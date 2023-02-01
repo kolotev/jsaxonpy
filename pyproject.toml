@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=61", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
@@ -11,7 +11,7 @@ description = "Java Saxon XSLT transformations in your python applications"
 authors = [{name = "Andrey Kolotev", email = "kolotev@gmail.com"}]
 readme = "README.md"
 license = {file = "LICENSE"}
-dynamic = ["version",]
+dynamic = ["version", "maintainers"]
 classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Intended Audience :: Developers",
@@ -49,15 +49,20 @@ test = [
     "pytest-cov",
     "pytest-html",
     "hypothesis",
-    "black",
+    "black>23.0",
     "isort",
     "flake8",
+    "virtualenv",
 ]
 
 dev = [
     "tox>=4.0.0",
     "twine",
+    "build",
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]  # list of folders that contain the packages (["."] by default)
 
 [tool.black]
 line-length = 99
