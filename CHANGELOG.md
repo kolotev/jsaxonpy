@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.3] 2023-02-01
+
+### Updated
+
+- configuration was amended to satisfy on premises CI/CD python build configuration, which is based on setup.py/setup.cfg files. pyproject.toml still considered as the primary one to publish on pypi index.
+
 ## [0.7.2] 2023-01-30
 
 ### Updated
